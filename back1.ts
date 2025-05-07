@@ -65,9 +65,6 @@ app.post("/api/beacon-data", (req: any, res: any) => {
 // ✅ Ruta para recibir datos del Nodo Móvil
 app.post("/api/nodo-movil", (req: any, res: any) => {
   const { ID_Movil, Temperatura, Timestamp_Logico } = req.body;
-  console.log(
-    `[LOG] Datos del nodo móvil: id_movil: ${ID_Movil} temperatura: ${Temperatura} Timestamp_Logico: ${Timestamp_Logico}`
-  );
   if (!ID_Movil || !Temperatura || !Timestamp_Logico === undefined) {
     return res.status(400).json({ error: "Datos incompletos del nodo móvil" });
   }
