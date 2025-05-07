@@ -110,6 +110,40 @@ app.get("/mobile", (_req: Request, res: Response) => {
   );
 });
 
+// ✅ Ruta para estimar proximidad
+app.get("/api/proximidad", (_req: Request, res: Response) => {
+  db.all(
+    `SELECT ID_Beacon, ID_Movil, RSSI, RTT, Timestamp_Logico 
+     FROM beacon_data 
+     WHERE Timestamp_Logico >= (SELECT MAX(Timestamp_Logico) - 5 FROM beacon_data) 
+     ORDER BY Timestamp_Logico DESC`,
+    [],
+    (err, rows) => {
+      if (err) return res.status(500).json({ error: err.message });
+
+      if (rows.length === 0) {
+        return res
+          .status(404)
+          .json({ error: "No hay datos recientes para estimar proximidad" });
+      }
+
+      // Calcular proximidad basada en RSSI y RTT
+      const proximidad = rows.map((row: any) => {
+        let distancia = Math.pow(10, (-row.RSSI - 40) / 20); // Fórmula aproximada para RSSI
+        distancia += row.RTT / 100; // Ajuste basado en RTT
+        return {
+          ID_Beacon: row.ID_Beacon,
+          ID_Movil: row.ID_Movil,
+          distancia: distancia.toFixed(2), // Distancia estimada en metros
+          Timestamp_Logico: row.Timestamp_Logico,
+        };
+      });
+
+      res.json({ proximidad });
+    }
+  );
+});
+
 app.get("/", (_req, res) => {
   res.send("Servidor Central del Sistema Distribuido - Entregable 1");
 });
