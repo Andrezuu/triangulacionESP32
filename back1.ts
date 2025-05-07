@@ -16,11 +16,13 @@ const db = new sqlite3.Database(
       db.run(`
         CREATE TABLE IF NOT EXISTS beacon_data (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          beacon_id INTEGER NOT NULL,
-          mobile_id INTEGER NOT NULL,
-          metric TEXT NOT NULL,
-          value INTEGER NOT NULL,
-          timestamp INTEGER DEFAULT (strftime('%s', 'now'))
+          ID_Beacon TEXT,
+          ID_Movil TEXT,
+          Metrica TEXT NOT NULL,
+          RSSI INTEGER NOT NULL,
+          RTT INTEGER NOT NULL,
+          Timestamp_Logico INTEGER NOT NULL,
+          created_at INTEGER DEFAULT (strftime('%s', 'now'))
         )
       `);
 
@@ -28,8 +30,9 @@ const db = new sqlite3.Database(
       db.run(`
         CREATE TABLE IF NOT EXISTS mobile_data (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          mobile_id INTEGER NOT NULL,
-          temperature INTEGER NOT NULL,
+          ID_Movil TEXT,
+          Temperatura INTEGER NOT NULL,
+          Timestamp_Logico INTEGER NOT NULL,
           timestamp INTEGER DEFAULT (strftime('%s', 'now'))
         )
       `);
@@ -38,20 +41,21 @@ const db = new sqlite3.Database(
 );
 
 // ✅ Ruta para recibir datos del Beacon
-app.post("/beacon", (req: any, res: any) => {
-  const { beacon_id, mobile_id, metric, value } = req.body;
-  if (!beacon_id || !mobile_id || !metric || value === undefined) {
+app.post("/api/beacon-data", (req: any, res: any) => {
+  const { ID_Beacon, ID_Movil, Metrica, RSSI, RTT, Timestamp_Logico } =
+    req.body;
+  if (!ID_Beacon || !ID_Movil || !Metrica || RSSI || RTT === undefined) {
     return res.status(400).json({ error: "Datos incompletos del beacon" });
   }
 
   db.run(
-    `INSERT INTO beacon_data (beacon_id, mobile_id, metric, value) VALUES (?, ?, ?, ?)`,
-    [beacon_id, mobile_id, metric, value],
+    `INSERT INTO beacon_data (ID_Beacon, ID_Movil, Metrica, RSSI, RTT, Timestamp_Logico) VALUES (?, ?, ?, ?, ?, ?)`,
+    [ID_Beacon, ID_Movil, Metrica, RSSI, RTT, Timestamp_Logico],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
 
       console.log(
-        `[LOG] Beacon ${beacon_id} -> Móvil ${mobile_id}: ${metric}=${value}`
+        `[LOG] Beacon ${ID_Beacon} -> Móvil ${ID_Movil}: Metrica: ${Metrica}=${RSSI}, ${RTT}, Timestamp_Logico=${Timestamp_Logico}`
       );
       res.status(201).json({ id: this.lastID });
     }
@@ -59,19 +63,21 @@ app.post("/beacon", (req: any, res: any) => {
 });
 
 // ✅ Ruta para recibir datos del Nodo Móvil
-app.post("/mobile", (req: any, res: any) => {
-  const { mobile_id, temperature } = req.body;
-  if (!mobile_id || temperature === undefined) {
+app.post("/api/nodo-movil", (req: any, res: any) => {
+  const { ID_Movil, Temperatura, Timestamp_Logico } = req.body;
+  if (!ID_Movil || Temperatura || Timestamp_Logico === undefined) {
     return res.status(400).json({ error: "Datos incompletos del nodo móvil" });
   }
 
   db.run(
-    `INSERT INTO mobile_data (mobile_id, temperature) VALUES (?, ?)`,
-    [mobile_id, temperature],
+    `INSERT INTO mobile_data (ID_Movil, Temperatura, Timestamp_Logico) VALUES (?, ?, ?)`,
+    [ID_Movil, Temperatura, Timestamp_Logico],
     function (err) {
       if (err) return res.status(500).json({ error: err.message });
 
-      console.log(`[LOG] Móvil ${mobile_id}: temperatura=${temperature}`);
+      console.log(
+        `[LOG] Móvil ${ID_Movil}: temperatura=${Temperatura} Timestamp_Logico=${Timestamp_Logico}`
+      );
       res.status(201).json({ id: this.lastID });
     }
   );
