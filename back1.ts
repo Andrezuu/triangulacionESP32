@@ -57,7 +57,9 @@ app.post("/api/beacon-data", (req: any, res: any) => {
       console.log(
         `[LOG] Beacon ${ID_Beacon} -> Móvil ${ID_Movil}: Metrica: ${Metrica}=${RSSI}, ${RTT}, Timestamp_Logico=${Timestamp_Logico}`
       );
-      res.status(201).json({ id: this.lastID });
+      res
+        .status(201)
+        .json({ id: this.lastID, message: "Beacon data received" });
     }
   );
 });
@@ -78,7 +80,9 @@ app.post("/api/nodo-movil", (req: any, res: any) => {
       console.log(
         `[LOG] Móvil ${ID_Movil}: temperatura=${Temperatura} Timestamp_Logico=${Timestamp_Logico}`
       );
-      res.status(201).json({ id: this.lastID });
+      res
+        .status(201)
+        .json({ id: this.lastID, message: "Mobile data received" });
     }
   );
 });
