@@ -44,7 +44,7 @@ const db = new sqlite3.Database(
 app.post("/api/beacon-data", (req: any, res: any) => {
   const { ID_Beacon, ID_Movil, Metrica, RSSI, RTT, Timestamp_Logico } =
     req.body;
-  if (!ID_Beacon || !ID_Movil || !Metrica || RSSI || RTT === undefined) {
+  if (!ID_Beacon || !ID_Movil || !Metrica || !RSSI || !RTT === undefined) {
     return res.status(400).json({ error: "Datos incompletos del beacon" });
   }
 
@@ -65,7 +65,10 @@ app.post("/api/beacon-data", (req: any, res: any) => {
 // ✅ Ruta para recibir datos del Nodo Móvil
 app.post("/api/nodo-movil", (req: any, res: any) => {
   const { ID_Movil, Temperatura, Timestamp_Logico } = req.body;
-  if (!ID_Movil || Temperatura || Timestamp_Logico === undefined) {
+  console.log(
+    `[LOG] Datos del nodo móvil: id_movil: ${ID_Movil} temperatura: ${Temperatura} Timestamp_Logico: ${Timestamp_Logico}`
+  );
+  if (!ID_Movil || !Temperatura || !Timestamp_Logico === undefined) {
     return res.status(400).json({ error: "Datos incompletos del nodo móvil" });
   }
 
