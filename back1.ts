@@ -115,8 +115,8 @@ app.get("/api/proximidad", (_req: Request, res: Response) => {
   db.all(
     `SELECT ID_Beacon, ID_Movil, RSSI, RTT, Timestamp_Logico 
      FROM beacon_data 
-     WHERE Timestamp_Logico >= (SELECT MAX(Timestamp_Logico) - 5 FROM beacon_data) 
-     ORDER BY Timestamp_Logico DESC`,
+     ORDER BY created_at DESC
+     LIMIT 5`,
     [],
     (err, rows) => {
       if (err) return res.status(500).json({ error: err.message });
