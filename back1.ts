@@ -1,4 +1,5 @@
 import express, { Request, Response } from "express";
+import trilateration from "trilateration";
 import sqlite3 from "sqlite3";
 import path from "path";
 
@@ -112,6 +113,10 @@ app.get("/mobile", (_req: Request, res: Response) => {
 
 // ✅ Ruta para estimar proximidad
 app.get("/api/proximidad", (_req: Request, res: Response) => {
+  trilateration.addBeacon(0, trilateration.vector(0, 0)); // Posición del Beacon 1 (X: 0, Y: 0)
+  trilateration.addBeacon(1, trilateration.vector(5, 0)); // Posición del Beacon 2 (X: 5, Y: 0)
+  trilateration.addBeacon(2, trilateration.vector(2.5, 4)); // Posición del Beacon 3 (X: 2.5, Y: 4)
+
   db.all(
     `SELECT ID_Beacon, ID_Movil, RSSI, RTT, Timestamp_Logico 
      FROM beacon_data 
@@ -129,13 +134,20 @@ app.get("/api/proximidad", (_req: Request, res: Response) => {
 
       // Calcular proximidad basada en RSSI y RTT
       const proximidad = rows.map((row: any) => {
-        let distancia = Math.pow(10, (-row.RSSI - 40) / 20); // Fórmula aproximada para RSSI
-        distancia += row.RTT / 100; // Ajuste basado en RTT
+        let distancia = Math.pow(10, (-row.RSSI - 40) / 20);
+        distancia += row.RTT / 100;
+        trilateration.setDistance(0, distancia);
+        trilateration.setDistance(1, distancia);
+        trilateration.setDistance(2, distancia);
+        const pos = trilateration.calculatePosition();
+
         return {
           ID_Beacon: row.ID_Beacon,
           ID_Movil: row.ID_Movil,
           distancia: distancia.toFixed(2), // Distancia estimada en metros
           Timestamp_Logico: row.Timestamp_Logico,
+          x: pos.x,
+          y: pos.y,
         };
       });
 
