@@ -23,9 +23,9 @@ HTML_TEMPLATE = """
   <script src=\"https://unpkg.com/leaflet@1.9.3/dist/leaflet.js\"></script>
   <script>
     const beacons = {
-      beacon123: { lat: -16.503, lng: -68.119 },
-      beacon456: { lat: -16.504, lng: -68.120 },
-      beacon789: { lat: -16.505, lng: -68.118 },
+      BEACON_01: { lat: -16.503, lng: -68.119 },
+      BEACON_02: { lat: -16.504, lng: -68.120 },
+      BEACON_03: { lat: -16.505, lng: -68.118 },
     };
 
     const map = L.map("map").setView([-16.504, -68.119], 18);
@@ -50,7 +50,7 @@ HTML_TEMPLATE = """
           const b = beacons[item.ID_Beacon];
           if (!b) return;
 
-          const radius = 50; // metros
+          const radius = parseFloat(item.distancia) * 1; // metros
           L.circle([b.lat, b.lng], {
             radius: radius,
             color: "blue",
@@ -80,10 +80,10 @@ def index():
 @app.route("/api/data")
 def api_data():
     try:
-        res = requests.get("http://192.168.55.136:5000/api/proximidad")
+        res = requests.get("http://192.168.188.136:5000/api/proximidad")
         return jsonify(res.json())
     except Exception as e:
-        return jsonify({"error": str(e), "proximidad": []})
+        return jsonify({"error": str(e), "proximidad": []}) 
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=8080, debug=True)

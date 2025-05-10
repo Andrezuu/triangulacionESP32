@@ -5,6 +5,11 @@
     "rootDir": "./",
     "outDir": "dist",
     "strict": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+
+    "typeRoots": ["./src/@types", "./node_modules/@types"]
   }
 }
