@@ -22,11 +22,15 @@ HTML_TEMPLATE = """
       BEACON_01: { lat: -16.5019, lng: -68.13293 },
       BEACON_02: { lat: -16.501967, lng: -68.132795 },
       BEACON_03: { lat: -16.502062, lng: -68.132995 }
+
+      # BEACON_01: { lat: -16.575438, lng: -68.127193 },
+      # BEACON_02: { lat: -16.575407, lng: -68.127228 },
+      # BEACON_03: { lat: -16.575428, lng: -68.127218 }
     };
 
     const map = L.map("map").setView([-16.5019, -68.13293], 18);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
+      maxZoom: 50,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 

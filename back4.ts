@@ -133,6 +133,10 @@ app.get("/api/proximidad", (_req: Request, res: Response) => {
     BEACON_01: { x: 0, y: 0 },
     BEACON_02: { x: 12.60, y: -7.45 },
     BEACON_03: { x: -5.76, y: -17.97 }
+
+    // BEACON_01: { x: 0, y: 0 },
+    // BEACON_02: { x: -3.28, y: 3.44 },
+    // BEACON_03: { x: -2.59, y: 1.11 }
   };
 
   db.all(
