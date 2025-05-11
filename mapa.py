@@ -80,7 +80,7 @@ def index():
 @app.route("/api/data")
 def api_data():
     try:
-        res = requests.get("http://192.168.188.136:5000/api/proximidad")
+        res = requests.get("http://192.168.1.220:5000/api/proximidad")
         return jsonify(res.json())
     except Exception as e:
         return jsonify({"error": str(e), "proximidad": []}) 

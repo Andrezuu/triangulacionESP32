@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Visualización de Triangulación</title>
+  <style>
+    canvas {
+      border: 1px solid #333;
+      background-color: #f8f9fa;
+      display: block;
+    }
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      overflow: hidden; /* Evitar scroll */
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      // Datos JSON de entrada
+      const data = {
+        "proximidad": [
+          {
+            "ID_Beacon": "B1",
+            "ID_Movil": "M1",
+            "x": 53.66,
+            "y": -34.42,
+            "angle": -32.68,
+            "distancias": ["11.20", "13.77", "12.44"],
+            "Timestamp_Logico": 1001
+          },
+          {
+            "ID_Beacon": "B2",
+            "ID_Movil": "M1",
+            "x": 313.97,
+            "y": -217.89,
+            "angle": -34.76,
+            "distancias": ["19.08", "21.23", "23.66"],
+            "Timestamp_Logico": 1001
+          },
+          {
+            "ID_Beacon": "B3",
+            "ID_Movil": "M1",
+            "x": 658.54,
+            "y": -442.24,
+            "angle": -33.88,
+            "distancias": ["33.02", "29.56", "36.85"],
+            "Timestamp_Logico": 1001
+          }
+        ]
+      };
+
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      // Escala para ajustar las coordenadas
+      const scale = 0.5; // Ajustar escala según sea necesario
+
+      // Ajustar el tamaño del canvas a la ventana
+      function resizeCanvas() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        draw(); // Redibujar después de redimensionar
+      }
+
+      window.addEventListener("resize", resizeCanvas);
+      resizeCanvas(); // Llamar al inicio para ajustar el tamaño
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Calcular el centro del canvas
+        const offsetX = canvas.width / 2;
+        const offsetY = canvas.height / 2;
+
+        // Dibujar beacons y círculos de distancia
+        data.proximidad.forEach((p, idx) => {
+          const x = offsetX + p.x * scale;
+          const y = offsetY - p.y * scale;
+          const color = ['red', 'green', 'blue'][idx];
+
+          // Beacon
+          ctx.beginPath();
+          ctx.arc(x, y, 5, 0, 2 * Math.PI);
+          ctx.fillStyle = color;
+          ctx.fill();
+
+          ctx.font = "12px sans-serif";
+          ctx.fillText(p.ID_Beacon, x + 8, y - 8);
+
+          // Distancia media como radio
+          const avgDist = p.distancias.map(Number).reduce((a, b) => a + b, 0) / p.distancias.length;
+          ctx.beginPath();
+          ctx.strokeStyle = color;
+          ctx.setLineDash([5, 5]);
+          ctx.arc(x, y, avgDist * scale * 10, 0, 2 * Math.PI); // Escalar radio
+          ctx.stroke();
+          ctx.setLineDash([]);
+        });
+
+        // Dibujar punto estimado del móvil como centro aproximado
+        const mx = data.proximidad.reduce((sum, p) => sum + p.x, 0) / data.proximidad.length;
+        const my = data.proximidad.reduce((sum, p) => sum + p.y, 0) / data.proximidad.length;
+        const px = offsetX + mx * scale;
+        const py = offsetY - my * scale;
+
+        ctx.beginPath();
+        ctx.arc(px, py, 6, 0, 2 * Math.PI);
+        ctx.fillStyle = "black";
+        ctx.fill();
+        ctx.fillText("M1 (estimado)", px + 10, py);
+      }
+
+      draw();
+    });
+  </script>
+</body>
+</html>

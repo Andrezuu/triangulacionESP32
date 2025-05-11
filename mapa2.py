@@ -5,11 +5,10 @@ app = Flask(__name__)
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Mapa de Proximidad</title>
+  <title>Visualización de Localización del Nodo Móvil</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
   <style>
     #map { height: 100vh; width: 100%; }
@@ -20,81 +19,80 @@ HTML_TEMPLATE = """
   <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
   <script>
     const beacons = {
-      BEACON_01: { lat: -16.503, lng: -68.119 },
-      BEACON_02: { lat: -16.504, lng: -68.120 },
-      BEACON_03: { lat: -16.505, lng: -68.118 },
+      BEACON_01: { lat: -16.5019, lng: -68.13293 },
+      BEACON_02: { lat: -16.501967, lng: -68.132795 },
+      BEACON_03: { lat: -16.502062, lng: -68.132995 }
     };
 
-    const map = L.map("map").setView([-16.504, -68.119], 18);
-
+    const map = L.map("map").setView([-16.5019, -68.13293], 18);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
+    const beaconMarkers = {};
     for (const id in beacons) {
       const b = beacons[id];
-      L.marker([b.lat, b.lng]).addTo(map).bindPopup("Beacon: " + id);
+      beaconMarkers[id] = L.marker([b.lat, b.lng]).addTo(map).bindPopup("Beacon: " + id);
     }
 
     let mobileCircle = null;
     let mobileMarker = null;
     let beaconCircles = [];
 
-    async function fetchProximidad() {
+    async function fetchData() {
       try {
         const res = await fetch("/api/data");
-        const data = await res.json();
-        const proximidad = data.proximidad || [];
-        const first = proximidad.find(p => p.x !== null && p.y !== null);
-        const temperatura = 25; // usar valor fijo o pedir al backend
+        const json = await res.json();
+        if (!json.proximidad || json.proximidad.length === 0) return;
 
-        // Limpiar círculos anteriores
-        beaconCircles.forEach(c => map.removeLayer(c));
-        beaconCircles = [];
+        const p = json.proximidad[0];
+        if (!p.lat || !p.lng) return;
 
-        // Dibujar círculos desde cada beacon
-        proximidad.forEach(p => {
-          const b = beacons[p.ID_Beacon];
-          if (b) {
-            const r = parseFloat(p.distancia);
-            const circle = L.circle([b.lat, b.lng], {
-              radius: r,
-              color: "blue",
-              fillOpacity: 0.15
-            }).addTo(map).bindPopup(`Distancia: ${r.toFixed(2)} m`);
-            beaconCircles.push(circle);
-          }
-        });
-
-        if (!first) return;
-        const x = first.x;
-        const y = first.y;
-        const color = temperatura < 20 ? "blue" : temperatura < 30 ? "orange" : "red";
+        const color = p.Temperatura < 20 ? "blue" : p.Temperatura < 30 ? "orange" : "red";
 
         if (mobileCircle) map.removeLayer(mobileCircle);
         if (mobileMarker) map.removeLayer(mobileMarker);
+        beaconCircles.forEach(c => map.removeLayer(c));
+        beaconCircles = [];
 
-        mobileCircle = L.circle([-16.504 + (y * 0.0001), -68.119 + (x * 0.0001)], {
+        mobileCircle = L.circle([p.lat, p.lng], {
           radius: 4,
           color: color,
           fillOpacity: 0.5
         }).addTo(map);
 
-        mobileMarker = L.marker([-16.504 + (y * 0.0001), -68.119 + (x * 0.0001)])
-          .addTo(map)
-          .bindPopup(`<b>Nodo Móvil</b><br>X: ${x.toFixed(2)}, Y: ${y.toFixed(2)}`);
+        mobileMarker = L.marker([p.lat, p.lng]).addTo(map).bindPopup(
+          `<b>${p.ID_Movil}</b><br>Lat: ${p.lat.toFixed(6)}, Lng: ${p.lng.toFixed(6)}<br>Temp: ${p.Temperatura}°C`
+        );
+
+        // Dibujar círculos de proximidad
+        if (p.distancias && p.distancias.length === 3) {
+          const beaconIDs = ["BEACON_01", "BEACON_02", "BEACON_03"];
+          p.distancias.forEach((distancia, idx) => {
+            const b = beacons[beaconIDs[idx]];
+            const r = parseFloat(distancia);
+            const c = L.circle([b.lat, b.lng], {
+              radius: r,
+              color: "gray",
+              fillOpacity: 0.1
+            }).addTo(map);
+            beaconCircles.push(c);
+          });
+        }
+
       } catch (err) {
-        console.error("Error al obtener datos:", err);
+        console.error("Error cargando datos:", err);
       }
     }
 
-    fetchProximidad();
-    setInterval(fetchProximidad, 5000);
+    fetchData();
+    setInterval(fetchData, 5000);
   </script>
 </body>
 </html>
 """
+
 
 @app.route("/")
 def index():
@@ -103,7 +101,7 @@ def index():
 @app.route("/api/data")
 def api_data():
     try:
-        res = requests.get("http://192.168.197.136:5000/api/proximidad")
+        res = requests.get("http://192.168.1.220:5000/api/proximidad", timeout=2)
         return jsonify(res.json())
     except Exception as e:
         return jsonify({"error": str(e), "proximidad": []})
