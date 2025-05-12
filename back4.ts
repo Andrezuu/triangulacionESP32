@@ -130,13 +130,14 @@ interface MobileRow {
 // ✅ Ruta principal de visualización
 app.get("/api/proximidad", (_req: Request, res: Response) => {
   const beaconPositions: Record<BeaconRow["ID_Beacon"], { x: number; y: number }> = {
-    BEACON_01: { x: 0, y: 0 },
-    BEACON_02: { x: 12.60, y: -7.45 },
-    BEACON_03: { x: -5.76, y: -17.97 }
+    BEACON_01: { x:0.1, y: 0 },
+    BEACON_02: { x:  0.001, y:  1.25 }, // origen
+    BEACON_03: { x:  0.53, y: 1.25 }
 
-    // BEACON_01: { x: 0, y: 0 },
-    // BEACON_02: { x: -3.28, y: 3.44 },
-    // BEACON_03: { x: -2.59, y: 1.11 }
+  // BEACON_01: { x: -5.38, y: 10.24 },
+  // BEACON_02: { x:  0.00, y:  0.00 }, // origen
+  // BEACON_03: { x:  7.49, y: -13.05 }
+
   };
 
   db.all(
@@ -166,10 +167,11 @@ app.get("/api/proximidad", (_req: Request, res: Response) => {
       const points: Point[] = beacons.map((id) => {
         const rssi = lastReadings[id].RSSI;
         const rtt = lastReadings[id].RTT;
-        const distancia = Math.pow(10, (-rssi - 40) / 20) + (rtt > 0 ? rtt / 100 : 0);
+        const distancia = Math.pow(10, (-rssi - 50) / 100) + (rtt > 0 ? rtt / 100 : 0);
+        
         return {
-          x: beaconPositions[id].x,
-          y: beaconPositions[id].y,
+          x: beaconPositions[id].x, //- 310,
+          y: beaconPositions[id].y, //- 175,
           distance: distancia
         };
       });
@@ -194,11 +196,16 @@ app.get("/api/proximidad", (_req: Request, res: Response) => {
           // 🔁 Conversión a coordenadas geográficas
           const METERS_TO_LAT = 0.000009;
           const METERS_TO_LNG = 0.000011;
-          const baseLat = -16.5019;
-          const baseLng = -68.13293;
+          // const baseLat = -16.575268
+          // const baseLng = -68.126969 
+          const baseLat =-16.575278
+          const baseLng = -68.126972
 
           const lat = baseLat + (pos?.y ?? 0) * METERS_TO_LAT;
           const lng = baseLng + (pos?.x ?? 0) * METERS_TO_LNG;
+
+          // Calcular el radio límite
+          const radioLimite = Math.max(...points.map((p) => p.distance));
 
           const response = {
             ID_Movil,
@@ -208,6 +215,7 @@ app.get("/api/proximidad", (_req: Request, res: Response) => {
             lng,
             angle: angle ?? null,
             distancias: points.map((p) => p.distance.toFixed(2)),
+            radioLimite, // Enviar el radio límite
             Timestamp_Logico,
             Temperatura
           };
